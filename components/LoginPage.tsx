@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { LogIn, AlertCircle } from 'lucide-react';
+import Image from 'next/image';
+import { AlertCircle } from 'lucide-react';
 
 interface LoginPageProps {
   onLogin: (email: string, password: string) => boolean;
@@ -37,9 +38,14 @@ export function LoginPage({ onLogin }: LoginPageProps) {
       <div className="w-full max-w-md">
         <div className="rounded-lg border border-border bg-card p-8">
           <div className="flex justify-center mb-6">
-            <div className="bg-primary/10 p-3 rounded-lg">
-              <LogIn className="h-8 w-8 text-primary" />
-            </div>
+            <Image
+              src="/logo.png"
+              alt="Hiliriset · IJO · Polibatam"
+              width={200}
+              height={68}
+              className="h-14 w-auto object-contain"
+              priority
+            />
           </div>
 
           <h1 className="text-2xl font-bold text-center text-foreground mb-2">
