@@ -102,7 +102,7 @@ export function TimelineView({ entries, onEdit, onDelete }: TimelineViewProps) {
                   {/* Edit / Delete actions */}
                   {(onEdit || onDelete) && (
                     <div className="flex items-center gap-2 px-3 pb-3 border-t border-border pt-2">
-                      {onEdit && (
+                      {onEdit && entry.status === 'pending' && (
                         <button
                           onClick={() => onEdit(entry.weekNumber)}
                           className="flex items-center gap-1 text-xs px-3 py-1 rounded-md border border-primary text-primary hover:bg-primary hover:text-primary-foreground transition-colors"
@@ -110,6 +110,11 @@ export function TimelineView({ entries, onEdit, onDelete }: TimelineViewProps) {
                           <Pencil className="h-3 w-3" />
                           Edit
                         </button>
+                      )}
+                      {onEdit && entry.status !== 'pending' && (
+                        <span className="flex items-center gap-1 text-xs px-3 py-1 rounded-md border border-border text-muted-foreground cursor-not-allowed">
+                          🔒 Terkunci
+                        </span>
                       )}
                       {onDelete && (
                         deleteConfirm === entry.id ? (

@@ -168,6 +168,7 @@ export function StudentInterface({
                 existingEntry={weekData}
                 milestoneTitle={weekInfo?.label}
                 onSubmit={addTimelineEntry}
+                isReadOnly={weekData?.status === 'reviewed' || weekData?.status === 'approved'}
               />
             </div>
           </div>

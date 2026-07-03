@@ -124,7 +124,8 @@ function TimelineForm({
   };
 
   if (isReadOnly) {
-    const canEdit = existingEntry && existingEntry.editCount === 0;
+    const isLocked = existingEntry?.status === 'reviewed' || existingEntry?.status === 'approved';
+    const canEdit = existingEntry && existingEntry.editCount === 0 && !isLocked;
     return (
       <div className="space-y-4 rounded-lg border border-border bg-card p-4">
         <div>
@@ -140,27 +141,37 @@ function TimelineForm({
           <p className="mt-2 text-foreground">{existingEntry?.nextWeek || '-'}</p>
         </div>
         {existingEntry?.supervisorFeedback && (
-          <div className="mt-4 rounded-lg bg-secondary/50 p-3">
-            <h3 className="text-sm font-semibold text-muted-foreground">SUPERVISOR FEEDBACK</h3>
+          <div className="mt-4 rounded-lg bg-amber-500/10 border border-amber-500/20 p-3">
+            <h3 className="text-sm font-semibold text-muted-foreground">FEEDBACK SUPERVISOR</h3>
             <p className="mt-2 text-foreground">{existingEntry.supervisorFeedback}</p>
             {existingEntry.feedbackDate && (
               <p className="mt-1 text-xs text-muted-foreground">
-                {new Date(existingEntry.feedbackDate).toLocaleDateString()}
+                {new Date(existingEntry.feedbackDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
               </p>
             )}
           </div>
         )}
-        {canEdit && (
+        {isLocked ? (
+          <div className="mt-4 rounded-lg bg-secondary border border-border p-3 flex items-center gap-2">
+            <span className="text-lg">🔒</span>
+            <p className="text-xs text-muted-foreground">
+              Logbook tidak dapat diedit karena sudah{' '}
+              <span className="font-semibold">
+                {existingEntry?.status === 'approved' ? 'disetujui' : 'ditinjau'}
+              </span>{' '}
+              oleh supervisor.
+            </p>
+          </div>
+        ) : canEdit ? (
           <button
             onClick={() => setIsOpen(true)}
             className="w-full mt-4 rounded-lg bg-accent px-4 py-2 font-medium text-accent-foreground hover:bg-accent/90 transition-colors"
           >
-            Edit Progress (1 time allowed)
+            Edit Logbook (1x diperbolehkan)
           </button>
-        )}
-        {existingEntry && existingEntry.editCount > 0 && (
+        ) : (
           <div className="mt-4 rounded-lg bg-yellow-500/10 border border-yellow-500/20 p-3">
-            <p className="text-xs text-yellow-700">Already edited. No further edits allowed.</p>
+            <p className="text-xs text-yellow-700">Logbook sudah pernah diedit. Tidak bisa diedit lagi.</p>
           </div>
         )}
       </div>
