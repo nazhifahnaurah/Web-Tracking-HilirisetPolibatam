@@ -151,18 +151,7 @@ function TimelineForm({
             )}
           </div>
         )}
-        {isLocked ? (
-          <div className="mt-4 rounded-lg bg-secondary border border-border p-3 flex items-center gap-2">
-            <span className="text-lg">🔒</span>
-            <p className="text-xs text-muted-foreground">
-              Logbook tidak dapat diedit karena sudah{' '}
-              <span className="font-semibold">
-                {existingEntry?.status === 'approved' ? 'disetujui' : 'ditinjau'}
-              </span>{' '}
-              oleh supervisor.
-            </p>
-          </div>
-        ) : canEdit ? (
+        {!isLocked && canEdit ? (
           <button
             onClick={() => setIsOpen(true)}
             className="w-full mt-4 rounded-lg bg-accent px-4 py-2 font-medium text-accent-foreground hover:bg-accent/90 transition-colors"

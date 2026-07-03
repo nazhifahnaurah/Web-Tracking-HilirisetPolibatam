@@ -111,11 +111,6 @@ export function TimelineView({ entries, onEdit, onDelete }: TimelineViewProps) {
                           Edit
                         </button>
                       )}
-                      {onEdit && entry.status !== 'pending' && (
-                        <span className="flex items-center gap-1 text-xs px-3 py-1 rounded-md border border-border text-muted-foreground cursor-not-allowed">
-                          🔒 Terkunci
-                        </span>
-                      )}
                       {onDelete && (
                         deleteConfirm === entry.id ? (
                           <div className="flex items-center gap-2">
