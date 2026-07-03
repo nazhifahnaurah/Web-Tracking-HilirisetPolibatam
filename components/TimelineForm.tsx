@@ -52,8 +52,6 @@ function TimelineForm({
       newErrors.blockers = 'Blockers field is required';
     if (!formData.nextWeek.trim())
       newErrors.nextWeek = 'Next week plans are required';
-    if (attachments.length === 0)
-      newErrors.attachments = 'At least one image or video is required';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };

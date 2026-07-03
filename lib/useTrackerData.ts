@@ -117,6 +117,14 @@ export function useTrackerData() {
   }, []);
 
   const addTimelineEntry = useCallback(async (entry: TimelineEntry) => {
+    // Optimistic update: tampilkan langsung di UI
+    setTimelineEntries(prev => {
+      const idx = prev.findIndex(
+        e => e.studentId === entry.studentId && e.weekNumber === entry.weekNumber
+      );
+      return idx >= 0 ? prev.map((e, i) => (i === idx ? entry : e)) : [...prev, entry];
+    });
+
     const { data, error } = await supabase
       .from('timeline_entries')
       .upsert(entryToRow(entry), { onConflict: 'id' })
@@ -130,6 +138,8 @@ export function useTrackerData() {
         );
         return idx >= 0 ? prev.map((e, i) => (i === idx ? saved : e)) : [...prev, saved];
       });
+    } else if (error) {
+      console.error('Gagal menyimpan ke Supabase:', error.message);
     }
   }, []);
 

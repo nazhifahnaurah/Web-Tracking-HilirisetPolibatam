@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { TimelineEntry } from '@/lib/types';
-import { CheckCircle, Clock, AlertCircle, Paperclip, Pencil, Trash2 } from 'lucide-react';
+import { CheckCircle, Clock, AlertCircle, Paperclip, Pencil, Trash2, MessageSquare } from 'lucide-react';
 import { AttachmentViewer } from './AttachmentViewer';
 
 interface TimelineViewProps {
@@ -29,15 +29,15 @@ export function TimelineView({ entries, onEdit, onDelete }: TimelineViewProps) {
       {/* Statistics */}
       <div className="grid grid-cols-3 gap-4">
         <div className="rounded-lg border border-border bg-card p-4">
-          <p className="text-xs text-muted-foreground">Submitted</p>
+          <p className="text-xs text-muted-foreground">Total Laporan</p>
           <p className="mt-2 text-2xl font-bold text-foreground">{entries.length}</p>
         </div>
         <div className="rounded-lg border border-border bg-card p-4">
-          <p className="text-xs text-muted-foreground">Reviewed</p>
+          <p className="text-xs text-muted-foreground">Sudah Ditinjau</p>
           <p className="mt-2 text-2xl font-bold text-amber-500">{reviewingEntries.length}</p>
         </div>
         <div className="rounded-lg border border-border bg-card p-4">
-          <p className="text-xs text-muted-foreground">Approved</p>
+          <p className="text-xs text-muted-foreground">Disetujui</p>
           <p className="mt-2 text-2xl font-bold text-green-500">{completedEntries.length}</p>
         </div>
       </div>
@@ -68,14 +68,26 @@ export function TimelineView({ entries, onEdit, onDelete }: TimelineViewProps) {
                         <div className="flex items-center justify-between gap-2">
                           <p className="font-semibold text-foreground">Week {entry.weekNumber}</p>
                           <div className="flex items-center gap-2">
+                            {entry.supervisorFeedback && (
+                              <span className="flex items-center gap-1 text-xs bg-amber-500/20 text-amber-700 px-2 py-1 rounded">
+                                <MessageSquare className="h-3 w-3" />
+                                Feedback
+                              </span>
+                            )}
                             {entry.attachments && entry.attachments.length > 0 && (
                               <span className="flex items-center gap-1 text-xs bg-accent/20 text-accent px-2 py-1 rounded">
                                 <Paperclip className="h-3 w-3" />
                                 {entry.attachments.length}
                               </span>
                             )}
-                            <span className="text-xs bg-primary/20 text-primary px-2 py-1 rounded font-medium">
-                              {entry.status}
+                            <span className={`text-xs px-2 py-1 rounded font-medium ${
+                              entry.status === 'approved'
+                                ? 'bg-green-500/20 text-green-700'
+                                : entry.status === 'reviewed'
+                                  ? 'bg-amber-500/20 text-amber-700'
+                                  : 'bg-blue-500/20 text-blue-700'
+                            }`}>
+                              {entry.status === 'approved' ? 'Disetujui' : entry.status === 'reviewed' ? 'Ditinjau' : 'Menunggu'}
                             </span>
                           </div>
                         </div>
@@ -129,10 +141,27 @@ export function TimelineView({ entries, onEdit, onDelete }: TimelineViewProps) {
                     </div>
                   )}
 
-                  {/* Attachment viewer */}
-                  {expandedEntry === entry.id && entry.attachments && entry.attachments.length > 0 && (
-                    <div className="px-3 pb-3 border-t border-border">
-                      <AttachmentViewer attachments={entry.attachments} />
+                  {/* Expanded detail: feedback + attachments */}
+                  {expandedEntry === entry.id && (
+                    <div className="border-t border-border">
+                      {entry.supervisorFeedback && (
+                        <div className="px-3 pt-3 pb-2">
+                          <p className="text-xs font-semibold text-muted-foreground mb-1">FEEDBACK SUPERVISOR</p>
+                          <div className="rounded-lg bg-amber-500/10 border border-amber-500/20 p-3">
+                            <p className="text-sm text-foreground whitespace-pre-wrap">{entry.supervisorFeedback}</p>
+                            {entry.feedbackDate && (
+                              <p className="mt-1 text-xs text-muted-foreground">
+                                {new Date(entry.feedbackDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                      {entry.attachments && entry.attachments.length > 0 && (
+                        <div className="px-3 pb-3">
+                          <AttachmentViewer attachments={entry.attachments} />
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

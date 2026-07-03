@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useRef } from 'react';
 import { Student } from '@/lib/types';
 import { TimelineForm, TimelineFormHandle } from './TimelineForm';
 import { TimelineView } from './TimelineView';
@@ -197,9 +197,9 @@ export function StudentInterface({
                 />
               </div>
               <div className="pt-2 text-xs text-muted-foreground space-y-1">
-                <div>Approved: {approved}</div>
-                <div>In Review: {reviewed}</div>
-                <div>Pending: {entries.length - approved - reviewed}</div>
+                <div>Disetujui: {approved}</div>
+                <div>Ditinjau: {reviewed}</div>
+                <div>Menunggu: {entries.length - approved - reviewed}</div>
               </div>
             </div>
           </div>
