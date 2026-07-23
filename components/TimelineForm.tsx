@@ -3,6 +3,9 @@
 import { forwardRef, useImperativeHandle, useState } from 'react';
 import { TimelineEntry, Student, Attachment } from '@/lib/types';
 import { Plus, X, Upload, Trash2, Image as ImageIcon, Film } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
+
+const ATTACHMENTS_BUCKET = 'attachments';
 
 export interface TimelineFormHandle {
   openForm: () => void;
@@ -39,6 +42,7 @@ function TimelineForm({
   }));
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [uploadError, setUploadError] = useState<string>('');
+  const [isUploading, setIsUploading] = useState(false);
 
   const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
   const MAX_FILES = 3;
@@ -56,7 +60,7 @@ function TimelineForm({
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleFileChange = (files: FileList | null) => {
+  const handleFileChange = async (files: FileList | null) => {
     if (!files) return;
     setUploadError('');
 
@@ -65,34 +69,42 @@ function TimelineForm({
       return;
     }
 
-    Array.from(files).forEach((file) => {
+    setIsUploading(true);
+    for (const file of Array.from(files)) {
       if (!ALLOWED_TYPES.includes(file.type)) {
         setUploadError('Only images and videos are allowed');
-        return;
+        continue;
       }
 
       if (file.size > MAX_FILE_SIZE) {
         setUploadError(`File "${file.name}" exceeds 5MB limit`);
-        return;
+        continue;
       }
 
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const base64 = e.target?.result as string;
-        const fileType = file.type.startsWith('image') ? 'image' : 'video';
-        const attachment: Attachment = {
-          id: `${Date.now()}-${Math.random()}`,
-          fileName: file.name,
-          fileType,
-          mimeType: file.type,
-          data: base64,
-          size: file.size,
-          uploadedAt: new Date().toISOString(),
-        };
-        setAttachments((prev) => [...prev, attachment]);
+      const path = `${student.id}/w${weekNumber}/${Date.now()}-${file.name}`;
+      const { error: uploadErr } = await supabase.storage
+        .from(ATTACHMENTS_BUCKET)
+        .upload(path, file);
+
+      if (uploadErr) {
+        setUploadError(`Gagal mengupload "${file.name}": ${uploadErr.message}`);
+        continue;
+      }
+
+      const { data: urlData } = supabase.storage.from(ATTACHMENTS_BUCKET).getPublicUrl(path);
+      const fileType = file.type.startsWith('image') ? 'image' : 'video';
+      const attachment: Attachment = {
+        id: `${Date.now()}-${Math.random()}`,
+        fileName: file.name,
+        fileType,
+        mimeType: file.type,
+        data: urlData.publicUrl,
+        size: file.size,
+        uploadedAt: new Date().toISOString(),
       };
-      reader.readAsDataURL(file);
-    });
+      setAttachments((prev) => [...prev, attachment]);
+    }
+    setIsUploading(false);
   };
 
   const removeAttachment = (id: string) => {
@@ -255,11 +267,12 @@ function TimelineForm({
                 onChange={(e) => handleFileChange(e.target.files)}
                 className="hidden"
                 id="file-upload"
+                disabled={isUploading}
               />
-              <label htmlFor="file-upload" className="cursor-pointer">
+              <label htmlFor="file-upload" className={isUploading ? 'cursor-wait' : 'cursor-pointer'}>
                 <Upload className="mx-auto h-8 w-8 text-muted-foreground" />
                 <p className="mt-2 text-sm font-medium text-foreground">
-                  Drag files here or click to upload
+                  {isUploading ? 'Mengupload...' : 'Drag files here or click to upload'}
                 </p>
                 <p className="mt-1 text-xs text-muted-foreground">
                   Images or videos, max 5MB each, up to 3 files
@@ -315,10 +328,11 @@ function TimelineForm({
           <div className="flex gap-2 pt-2">
             <button
               type="submit"
-              className="flex-1 rounded-lg bg-primary px-4 py-2 font-medium text-primary-foreground hover:bg-primary/90"
+              disabled={isUploading}
+              className="flex-1 rounded-lg bg-primary px-4 py-2 font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Plus className="mr-2 inline h-4 w-4" />
-              {existingEntry ? 'Update Entry' : 'Submit Entry'}
+              {isUploading ? 'Mengupload...' : existingEntry ? 'Update Entry' : 'Submit Entry'}
             </button>
             {isOpen && (
               <button

@@ -75,6 +75,7 @@ export function useTrackerData() {
       const { data, error } = await supabase
         .from('timeline_entries')
         .select('*')
+        .eq('is_deleted', false)
         .order('week_number', { ascending: true });
       if (!error && data) setTimelineEntries(data.map(rowToEntry));
       setIsLoading(false);
@@ -87,6 +88,7 @@ export function useTrackerData() {
       supabase
         .from('timeline_entries')
         .select('*')
+        .eq('is_deleted', false)
         .order('week_number', { ascending: true })
         .then(({ data }) => { if (data) setTimelineEntries(data.map(rowToEntry)); });
 
@@ -159,7 +161,9 @@ export function useTrackerData() {
   }, [timelineEntries]);
 
   const deleteTimelineEntry = useCallback(async (id: string) => {
-    const { error } = await supabase.from('timeline_entries').delete().eq('id', id);
+    // Soft delete: the anon key is no longer allowed to hard-DELETE rows (see RLS policy),
+    // so hiding an entry means flagging it instead of removing the row.
+    const { error } = await supabase.from('timeline_entries').update({ is_deleted: true }).eq('id', id);
     if (!error) setTimelineEntries(prev => prev.filter(e => e.id !== id));
   }, []);
 
