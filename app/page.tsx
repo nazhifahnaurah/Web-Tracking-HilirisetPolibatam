@@ -6,6 +6,8 @@ import { LoginPage } from '@/components/LoginPage';
 import { WeekPicker } from '@/components/WeekPicker';
 import { StudentInterface } from '@/components/StudentInterface';
 import { SupervisorInterface } from '@/components/SupervisorInterface';
+import { StudentAttendance } from '@/components/StudentAttendance';
+import { SupervisorAttendance } from '@/components/SupervisorAttendance';
 import { useTrackerData } from '@/lib/useTrackerData';
 
 export default function Page() {
@@ -23,6 +25,7 @@ export default function Page() {
 
   const [weekNumber, setWeekNumber] = useState(1);
   const [selectedStudent, setSelectedStudent] = useState<string | null>(null);
+  const [activeMenu, setActiveMenu] = useState<'logbook' | 'presensi'>('logbook');
 
   useEffect(() => {
     if (state.currentUser?.role === 'supervisor' && state.students.length > 0 && !selectedStudent) {
@@ -58,31 +61,62 @@ export default function Page() {
       <Header currentUser={state.currentUser} onLogout={handleLogout} />
 
       <main className="mx-auto max-w-7xl px-6 py-8">
-        <WeekPicker currentWeek={weekNumber} onWeekChange={setWeekNumber} />
-        <div className="mt-6">
-          {isStudent ? (
-            <StudentInterface
-              student={state.currentUser as any}
-              weekNumber={weekNumber}
-              onWeekChange={setWeekNumber}
-              getStudentEntries={getStudentEntries}
-              getWeekData={getWeekData}
-              addTimelineEntry={addTimelineEntry}
-              deleteTimelineEntry={deleteTimelineEntry}
-            />
-          ) : (
-            <SupervisorInterface
-              supervisor={state.currentUser as any}
-              students={state.students}
-              selectedStudent={selectedStudent}
-              weekNumber={weekNumber}
-              onStudentChange={setSelectedStudent}
-              onWeekChange={setWeekNumber}
-              updateTimelineEntry={updateTimelineEntry}
-              timelineEntries={state.timelineEntries}
-            />
-          )}
+        <div className="mb-6 flex gap-2 border-b border-border">
+          <button
+            onClick={() => setActiveMenu('logbook')}
+            className={`px-4 py-2 text-sm font-medium transition-colors ${
+              activeMenu === 'logbook'
+                ? 'border-b-2 border-primary text-primary'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            Logbook Mingguan
+          </button>
+          <button
+            onClick={() => setActiveMenu('presensi')}
+            className={`px-4 py-2 text-sm font-medium transition-colors ${
+              activeMenu === 'presensi'
+                ? 'border-b-2 border-primary text-primary'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            Presensi Harian
+          </button>
         </div>
+
+        {activeMenu === 'logbook' ? (
+          <>
+            <WeekPicker currentWeek={weekNumber} onWeekChange={setWeekNumber} />
+            <div className="mt-6">
+              {isStudent ? (
+                <StudentInterface
+                  student={state.currentUser as any}
+                  weekNumber={weekNumber}
+                  onWeekChange={setWeekNumber}
+                  getStudentEntries={getStudentEntries}
+                  getWeekData={getWeekData}
+                  addTimelineEntry={addTimelineEntry}
+                  deleteTimelineEntry={deleteTimelineEntry}
+                />
+              ) : (
+                <SupervisorInterface
+                  supervisor={state.currentUser as any}
+                  students={state.students}
+                  selectedStudent={selectedStudent}
+                  weekNumber={weekNumber}
+                  onStudentChange={setSelectedStudent}
+                  onWeekChange={setWeekNumber}
+                  updateTimelineEntry={updateTimelineEntry}
+                  timelineEntries={state.timelineEntries}
+                />
+              )}
+            </div>
+          </>
+        ) : isStudent ? (
+          <StudentAttendance student={state.currentUser as any} />
+        ) : (
+          <SupervisorAttendance students={state.students} />
+        )}
       </main>
     </div>
   );
