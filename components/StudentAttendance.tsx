@@ -245,9 +245,15 @@ export function StudentAttendance({ student }: StudentAttendanceProps) {
               <p className="text-sm text-muted-foreground">
                 Jarak Anda sekitar {Math.round(distance ?? 0)} meter dari kampus (maksimal {MAX_DISTANCE_METERS} meter).
               </p>
+              {coords && (
+                <p className="rounded bg-secondary px-3 py-1.5 text-xs font-mono text-foreground">
+                  Lokasi terdeteksi: {coords.lat.toFixed(7)}, {coords.lng.toFixed(7)}
+                </p>
+              )}
               <p className="text-xs text-muted-foreground">
-                Kalau Anda yakin sedang di kampus, kemungkinan ini karena akurasi lokasi perangkat. Coba pakai HP dengan
-                GPS aktif (bukan laptop/PC), dan pastikan berada di ruangan terbuka, lalu coba lagi.
+                Kalau Anda yakin sedang di kampus, tempel angka di atas ke pencarian Google Maps untuk lihat titik
+                persisnya. Kemungkinan ini soal akurasi lokasi perangkat — coba pakai HP dengan GPS aktif (bukan
+                laptop/PC), lalu coba lagi.
               </p>
               <div className="flex gap-2">
                 <button
