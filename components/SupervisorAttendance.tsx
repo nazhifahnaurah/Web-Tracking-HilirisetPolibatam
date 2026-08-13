@@ -4,18 +4,22 @@ import { useEffect, useState } from 'react';
 import { Student } from '@/lib/types';
 import { useAttendance } from '@/lib/useAttendance';
 import { AttendanceRecord, todayDateString } from '@/lib/attendance';
-import { ChevronLeft, ChevronRight, MapPin, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, MapPin, Trash2, X } from 'lucide-react';
 
 interface SupervisorAttendanceProps {
   students: Student[];
 }
 
 export function SupervisorAttendance({ students }: SupervisorAttendanceProps) {
-  const { fetchRecordsForDateAll } = useAttendance();
+  const { fetchRecordsForDateAll, deleteAttendance } = useAttendance();
   const [date, setDate] = useState(todayDateString());
   const [records, setRecords] = useState<AttendanceRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [lightbox, setLightbox] = useState<{ url: string; title: string } | null>(null);
+  const [confirmingStudentId, setConfirmingStudentId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const reload = () => fetchRecordsForDateAll(date).then(setRecords);
 
   useEffect(() => {
     setLoading(true);
@@ -24,6 +28,16 @@ export function SupervisorAttendance({ students }: SupervisorAttendanceProps) {
       setLoading(false);
     });
   }, [date, fetchRecordsForDateAll]);
+
+  const handleDelete = async (checkIn?: AttendanceRecord, checkOut?: AttendanceRecord) => {
+    setDeleting(true);
+    for (const record of [checkIn, checkOut]) {
+      if (record) await deleteAttendance(record.id);
+    }
+    await reload();
+    setDeleting(false);
+    setConfirmingStudentId(null);
+  };
 
   const shiftDate = (deltaDays: number) => {
     const d = new Date(date + 'T00:00:00');
@@ -86,7 +100,8 @@ export function SupervisorAttendance({ students }: SupervisorAttendanceProps) {
                   <th className="py-2 pr-4 font-medium">Datang</th>
                   <th className="py-2 pr-4 font-medium">Status</th>
                   <th className="py-2 pr-4 font-medium">Pulang</th>
-                  <th className="py-2 font-medium">Foto</th>
+                  <th className="py-2 pr-4 font-medium">Foto</th>
+                  <th className="py-2 font-medium">Aksi</th>
                 </tr>
               </thead>
               <tbody>
@@ -139,6 +154,36 @@ export function SupervisorAttendance({ students }: SupervisorAttendanceProps) {
                             </button>
                           )}
                         </div>
+                      </td>
+                      <td className="py-3">
+                        {!checkIn && !checkOut ? null : confirmingStudentId === student.id ? (
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-destructive">Hapus presensi ini?</span>
+                            <button
+                              onClick={() => handleDelete(checkIn, checkOut)}
+                              disabled={deleting}
+                              className="rounded-lg bg-destructive px-3 py-1.5 text-xs font-medium text-destructive-foreground hover:bg-destructive/90 disabled:opacity-50"
+                            >
+                              Ya, Hapus
+                            </button>
+                            <button
+                              onClick={() => setConfirmingStudentId(null)}
+                              disabled={deleting}
+                              className="rounded-lg border border-border px-3 py-1.5 text-xs text-foreground hover:bg-secondary"
+                            >
+                              Batal
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => setConfirmingStudentId(student.id)}
+                            className="flex items-center gap-1 rounded-lg border border-border px-2 py-1.5 text-xs text-destructive hover:bg-destructive/10"
+                            title="Hapus presensi hari ini"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                            Hapus
+                          </button>
+                        )}
                       </td>
                     </tr>
                   );

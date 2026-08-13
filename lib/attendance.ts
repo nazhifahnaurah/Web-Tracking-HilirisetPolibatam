@@ -14,10 +14,13 @@ export interface AttendanceRecord {
   status: AttendanceStatus | null;
 }
 
-// Politeknik Negeri Batam, Batam Centre — cross-checked against OpenStreetMap Nominatim
-// and independent web search; both agreed within ~20m of each other.
-export const CAMPUS_LOCATION = { lat: 1.1184317, lng: 104.0484820 };
-export const MAX_DISTANCE_METERS = 50;
+// Politeknik Negeri Batam. NOTE: an earlier version of this constant was sourced from
+// web search + OpenStreetMap and turned out to be ~1.9km off the real campus (both
+// external sources were wrong/stale). This value is a real on-site GPS reading
+// reported by a user physically standing at campus (2026-08-13) — trust on-the-ground
+// readings over external geocoding sources if this ever needs correcting again.
+export const CAMPUS_LOCATION = { lat: 1.1143659, lng: 104.0322185 };
+export const MAX_DISTANCE_METERS = 300;
 
 // Presensi hanya berlaku Senin–Jumat, 08:00–16:30 waktu perangkat pengguna.
 export const WINDOW_START_MINUTES = 8 * 60; // 08:00

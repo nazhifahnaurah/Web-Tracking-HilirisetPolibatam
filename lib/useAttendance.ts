@@ -107,5 +107,19 @@ export function useAttendance() {
     return data.map(rowToRecord);
   }, []);
 
-  return { submitAttendance, fetchRecordsForDate, fetchRecordsForStudentRange, fetchRecordsForDateAll };
+  // Only exposed to supervisors in the UI (StudentAttendance.tsx never calls this) —
+  // see project notes on why the DB itself can't enforce that distinction without real auth.
+  const deleteAttendance = useCallback(async (id: string): Promise<{ error?: string }> => {
+    const { error } = await supabase.from('attendance').delete().eq('id', id);
+    if (error) return { error: error.message };
+    return {};
+  }, []);
+
+  return {
+    submitAttendance,
+    fetchRecordsForDate,
+    fetchRecordsForStudentRange,
+    fetchRecordsForDateAll,
+    deleteAttendance,
+  };
 }
