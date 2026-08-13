@@ -14,13 +14,15 @@ export interface AttendanceRecord {
   status: AttendanceStatus | null;
 }
 
-// Politeknik Negeri Batam. NOTE: an earlier version of this constant was sourced from
-// web search + OpenStreetMap and turned out to be ~1.9km off the real campus (both
-// external sources were wrong/stale). This value is a real on-site GPS reading
-// reported by a user physically standing at campus (2026-08-13) — trust on-the-ground
-// readings over external geocoding sources if this ever needs correcting again.
-export const CAMPUS_LOCATION = { lat: 1.1143659, lng: 104.0322185 };
-export const MAX_DISTANCE_METERS = 500;
+// Politeknik Negeri Batam. This is the average of 3 live browser geolocation readings
+// taken on-site (2026-08-13), cross-checked by pasting the coordinate into Google Maps
+// and confirming the pin lands on campus — matches the original web search/OSM sourced
+// value within ~50m. An earlier "on-site GPS reading" a user manually copied from a
+// map pin turned out to be ~1.9km off (likely a mis-placed pin, not a real reading) —
+// this value superseded it after verification. Trust readings verified against a map,
+// not a single manually-copied number, if this ever needs correcting again.
+export const CAMPUS_LOCATION = { lat: 1.1185156, lng: 104.0489578 };
+export const MAX_DISTANCE_METERS = 150;
 
 // Presensi hanya berlaku Senin–Jumat, 08:00–16:30 waktu perangkat pengguna.
 export const WINDOW_START_MINUTES = 8 * 60; // 08:00
