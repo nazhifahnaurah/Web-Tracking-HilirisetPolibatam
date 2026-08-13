@@ -211,6 +211,9 @@ export function StudentAttendance({ student }: StudentAttendanceProps) {
         <p className="mt-1 text-sm text-muted-foreground">
           Jam kerja: {formatWindowLabel()} · Senin - Jumat · Lokasi wajib di area Politeknik Negeri Batam
         </p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Gunakan HP dengan GPS aktif untuk hasil lokasi paling akurat — lokasi dari laptop/PC seringkali kurang tepat.
+        </p>
       </div>
 
       {!workday && (
@@ -241,6 +244,10 @@ export function StudentAttendance({ student }: StudentAttendanceProps) {
               <p className="text-sm font-medium text-foreground">Anda berada di luar area kampus</p>
               <p className="text-sm text-muted-foreground">
                 Jarak Anda sekitar {Math.round(distance ?? 0)} meter dari kampus (maksimal {MAX_DISTANCE_METERS} meter).
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Kalau Anda yakin sedang di kampus, kemungkinan ini karena akurasi lokasi perangkat. Coba pakai HP dengan
+                GPS aktif (bukan laptop/PC), dan pastikan berada di ruangan terbuka, lalu coba lagi.
               </p>
               <div className="flex gap-2">
                 <button

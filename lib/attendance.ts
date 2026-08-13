@@ -20,7 +20,7 @@ export interface AttendanceRecord {
 // reported by a user physically standing at campus (2026-08-13) — trust on-the-ground
 // readings over external geocoding sources if this ever needs correcting again.
 export const CAMPUS_LOCATION = { lat: 1.1143659, lng: 104.0322185 };
-export const MAX_DISTANCE_METERS = 300;
+export const MAX_DISTANCE_METERS = 500;
 
 // Presensi hanya berlaku Senin–Jumat, 08:00–16:30 waktu perangkat pengguna.
 export const WINDOW_START_MINUTES = 8 * 60; // 08:00
