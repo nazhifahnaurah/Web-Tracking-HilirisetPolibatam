@@ -3,7 +3,14 @@
 import { useEffect, useState } from 'react';
 import { Student } from '@/lib/types';
 import { useAttendance } from '@/lib/useAttendance';
-import { AttendanceRecord, MIN_WORK_HOURS, formatDurationHours, todayDateString, workDurationHours } from '@/lib/attendance';
+import {
+  AttendanceRecord,
+  MIN_WORK_HOURS,
+  checkInStatus,
+  formatDurationHours,
+  todayDateString,
+  workDurationHours,
+} from '@/lib/attendance';
 import { ChevronLeft, ChevronRight, MapPin, Trash2, X } from 'lucide-react';
 
 interface SupervisorAttendanceProps {
@@ -111,6 +118,7 @@ export function SupervisorAttendance({ students }: SupervisorAttendanceProps) {
                   const checkOut = records.find((r) => r.studentId === student.id && r.type === 'check_out');
                   const duration =
                     checkIn && checkOut ? workDurationHours(checkIn.recordedAt, checkOut.recordedAt) : null;
+                  const checkInLiveStatus = checkIn ? checkInStatus(new Date(checkIn.recordedAt)) : null;
                   return (
                     <tr key={student.id} className="border-b border-border/50">
                       <td className="py-3 pr-4">
@@ -123,7 +131,7 @@ export function SupervisorAttendance({ students }: SupervisorAttendanceProps) {
                           <span className="rounded bg-secondary px-2 py-0.5 text-xs font-medium text-muted-foreground">
                             Tidak Hadir
                           </span>
-                        ) : checkIn.status === 'terlambat' ? (
+                        ) : checkInLiveStatus === 'terlambat' ? (
                           <span className="rounded bg-amber-500/20 px-2 py-0.5 text-xs font-medium text-amber-700">
                             Terlambat
                           </span>

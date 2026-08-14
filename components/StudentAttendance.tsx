@@ -165,11 +165,15 @@ export function StudentAttendance({ student }: StudentAttendanceProps) {
               <p className="font-medium text-foreground">{label} sudah tercatat</p>
               <p className="text-sm text-muted-foreground">
                 {new Date(record.recordedAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
-                {record.status && (
-                  <span className={record.status === 'terlambat' ? 'ml-2 text-amber-600' : 'ml-2 text-green-600'}>
-                    · {record.status === 'terlambat' ? 'Terlambat' : 'Tepat Waktu'}
-                  </span>
-                )}
+                {type === 'check_in' &&
+                  (() => {
+                    const liveStatus = checkInStatus(new Date(record.recordedAt));
+                    return (
+                      <span className={liveStatus === 'terlambat' ? 'ml-2 text-amber-600' : 'ml-2 text-green-600'}>
+                        · {liveStatus === 'terlambat' ? 'Terlambat' : 'Tepat Waktu'}
+                      </span>
+                    );
+                  })()}
               </p>
             </div>
           </div>
@@ -349,6 +353,7 @@ export function StudentAttendance({ student }: StudentAttendanceProps) {
                   const dayIn = history.find((h) => h.date === date && h.type === 'check_in');
                   const dayOut = history.find((h) => h.date === date && h.type === 'check_out');
                   const duration = dayIn && dayOut ? workDurationHours(dayIn.recordedAt, dayOut.recordedAt) : null;
+                  const dayInStatus = dayIn ? checkInStatus(new Date(dayIn.recordedAt)) : null;
                   const fmtTime = (r?: AttendanceRecord) =>
                     r ? new Date(r.recordedAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : '-';
                   return (
@@ -359,7 +364,7 @@ export function StudentAttendance({ student }: StudentAttendanceProps) {
                       <td className="py-2 pr-4 text-foreground">{fmtTime(dayIn)}</td>
                       <td className="py-2 pr-4 text-foreground">{fmtTime(dayOut)}</td>
                       <td className="py-2 pr-4">
-                        {dayIn?.status === 'terlambat' ? (
+                        {dayInStatus === 'terlambat' ? (
                           <span className="rounded bg-amber-500/20 px-2 py-0.5 text-xs font-medium text-amber-700">
                             Terlambat
                           </span>
