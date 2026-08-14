@@ -24,10 +24,11 @@ export interface AttendanceRecord {
 export const CAMPUS_LOCATION = { lat: 1.1185156, lng: 104.0489578 };
 export const MAX_DISTANCE_METERS = 150;
 
-// Presensi hanya berlaku Senin–Jumat, 08:00–16:30 waktu perangkat pengguna.
-export const WINDOW_START_MINUTES = 8 * 60; // 08:00
-export const WINDOW_END_MINUTES = 16 * 60 + 30; // 16:30
-export const ON_TIME_CUTOFF_MINUTES = WINDOW_START_MINUTES; // check-in setelah 08:00 = terlambat
+// Presensi hanya berlaku Senin–Jumat, bisa dilakukan jam berapa pun. Check-in setelah
+// jam 10:00 tetap diterima tapi ditandai terlambat, dan total durasi kerja per hari
+// diharapkan minimal 8 jam (kalau kurang, ditandai peringatan durasi).
+export const ON_TIME_CUTOFF_MINUTES = 10 * 60; // 10:00
+export const MIN_WORK_HOURS = 8;
 
 export function todayDateString(d: Date = new Date()): string {
   const y = d.getFullYear();
@@ -45,13 +46,21 @@ export function minutesSinceMidnight(d: Date = new Date()): number {
   return d.getHours() * 60 + d.getMinutes() + d.getSeconds() / 60;
 }
 
-export function isWithinAttendanceWindow(d: Date = new Date()): boolean {
-  const mins = minutesSinceMidnight(d);
-  return mins >= WINDOW_START_MINUTES && mins <= WINDOW_END_MINUTES;
-}
-
 export function checkInStatus(d: Date = new Date()): AttendanceStatus {
   return minutesSinceMidnight(d) <= ON_TIME_CUTOFF_MINUTES ? 'tepat_waktu' : 'terlambat';
+}
+
+/** Durasi kerja dalam jam antara waktu check-in dan check-out. */
+export function workDurationHours(checkInIso: string, checkOutIso: string): number {
+  const ms = new Date(checkOutIso).getTime() - new Date(checkInIso).getTime();
+  return ms / (1000 * 60 * 60);
+}
+
+export function formatDurationHours(hours: number): string {
+  const totalMinutes = Math.max(0, Math.round(hours * 60));
+  const h = Math.floor(totalMinutes / 60);
+  const m = totalMinutes % 60;
+  return `${h} jam ${m} menit`;
 }
 
 /** Jarak antara dua koordinat GPS dalam meter (formula Haversine). */
@@ -72,12 +81,3 @@ export function distanceInMeters(
   return R * c;
 }
 
-export function formatWindowLabel(): string {
-  return '08:00 - 16:30';
-}
-
-export function formatMinutesAsTime(mins: number): string {
-  const h = Math.floor(mins / 60);
-  const m = Math.floor(mins % 60);
-  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-}

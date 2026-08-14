@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Student } from '@/lib/types';
 import { useAttendance } from '@/lib/useAttendance';
-import { AttendanceRecord, todayDateString } from '@/lib/attendance';
+import { AttendanceRecord, MIN_WORK_HOURS, formatDurationHours, todayDateString, workDurationHours } from '@/lib/attendance';
 import { ChevronLeft, ChevronRight, MapPin, Trash2, X } from 'lucide-react';
 
 interface SupervisorAttendanceProps {
@@ -100,6 +100,7 @@ export function SupervisorAttendance({ students }: SupervisorAttendanceProps) {
                   <th className="py-2 pr-4 font-medium">Datang</th>
                   <th className="py-2 pr-4 font-medium">Status</th>
                   <th className="py-2 pr-4 font-medium">Pulang</th>
+                  <th className="py-2 pr-4 font-medium">Durasi</th>
                   <th className="py-2 pr-4 font-medium">Foto</th>
                   <th className="py-2 font-medium">Aksi</th>
                 </tr>
@@ -108,6 +109,8 @@ export function SupervisorAttendance({ students }: SupervisorAttendanceProps) {
                 {students.map((student) => {
                   const checkIn = records.find((r) => r.studentId === student.id && r.type === 'check_in');
                   const checkOut = records.find((r) => r.studentId === student.id && r.type === 'check_out');
+                  const duration =
+                    checkIn && checkOut ? workDurationHours(checkIn.recordedAt, checkOut.recordedAt) : null;
                   return (
                     <tr key={student.id} className="border-b border-border/50">
                       <td className="py-3 pr-4">
@@ -131,6 +134,17 @@ export function SupervisorAttendance({ students }: SupervisorAttendanceProps) {
                         )}
                       </td>
                       <td className="py-3 pr-4 text-foreground">{fmtTime(checkOut)}</td>
+                      <td className="py-3 pr-4">
+                        {duration === null ? (
+                          <span className="text-muted-foreground">-</span>
+                        ) : duration < MIN_WORK_HOURS ? (
+                          <span className="rounded bg-amber-500/20 px-2 py-0.5 text-xs font-medium text-amber-700">
+                            {formatDurationHours(duration)} ⚠
+                          </span>
+                        ) : (
+                          <span className="text-foreground">{formatDurationHours(duration)}</span>
+                        )}
+                      </td>
                       <td className="py-3">
                         <div className="flex gap-2">
                           {checkIn && (

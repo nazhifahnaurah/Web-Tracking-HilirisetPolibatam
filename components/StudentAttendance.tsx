@@ -9,12 +9,13 @@ import {
   AttendanceType,
   CAMPUS_LOCATION,
   MAX_DISTANCE_METERS,
+  MIN_WORK_HOURS,
   checkInStatus,
   distanceInMeters,
-  formatWindowLabel,
-  isWithinAttendanceWindow,
+  formatDurationHours,
   isWorkday,
   todayDateString,
+  workDurationHours,
 } from '@/lib/attendance';
 import { CheckCircle2, Clock, MapPin, XCircle, Loader2 } from 'lucide-react';
 
@@ -40,10 +41,11 @@ export function StudentAttendance({ student }: StudentAttendanceProps) {
 
   const today = todayDateString();
   const workday = isWorkday();
-  const withinWindow = isWithinAttendanceWindow();
 
   const checkIn = todayRecords.find((r) => r.type === 'check_in');
   const checkOut = todayRecords.find((r) => r.type === 'check_out');
+  const todayDuration =
+    checkIn && checkOut ? workDurationHours(checkIn.recordedAt, checkOut.recordedAt) : null;
 
   const monthRange = useMemo(() => {
     const now = new Date();
@@ -82,10 +84,6 @@ export function StudentAttendance({ student }: StudentAttendanceProps) {
   const startAttendance = (type: AttendanceType) => {
     if (!workday) {
       setStatusMessage('Presensi hanya bisa dilakukan hari Senin sampai Jumat.');
-      return;
-    }
-    if (!withinWindow) {
-      setStatusMessage(`Presensi hanya bisa dilakukan pukul ${formatWindowLabel()}.`);
       return;
     }
     setActiveType(type);
@@ -209,7 +207,8 @@ export function StudentAttendance({ student }: StudentAttendanceProps) {
           {new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
         </h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Jam kerja: {formatWindowLabel()} · Senin - Jumat · Lokasi wajib di area Politeknik Negeri Batam
+          Senin - Jumat · Check-in paling lambat jam 10:00 · Total kerja minimal {MIN_WORK_HOURS} jam/hari · Lokasi
+          wajib di area Politeknik Negeri Batam
         </p>
         <p className="mt-1 text-xs text-muted-foreground">
           Gunakan HP dengan GPS aktif untuk hasil lokasi paling akurat — lokasi dari laptop/PC seringkali kurang tepat.
@@ -226,6 +225,18 @@ export function StudentAttendance({ student }: StudentAttendanceProps) {
         <div className="space-y-3">
           {renderStatusCard('check_in', checkIn)}
           {checkIn && renderStatusCard('check_out', checkOut)}
+          {todayDuration !== null && (
+            <div
+              className={`rounded-lg border p-3 text-sm ${
+                todayDuration < MIN_WORK_HOURS
+                  ? 'border-amber-500/30 bg-amber-500/10 text-amber-700'
+                  : 'border-green-500/30 bg-green-500/10 text-green-700'
+              }`}
+            >
+              Total kerja hari ini: {formatDurationHours(todayDuration)}
+              {todayDuration < MIN_WORK_HOURS && ` — kurang dari ${MIN_WORK_HOURS} jam`}
+            </div>
+          )}
         </div>
       )}
 
@@ -329,13 +340,15 @@ export function StudentAttendance({ student }: StudentAttendanceProps) {
                   <th className="py-2 pr-4 font-medium">Tanggal</th>
                   <th className="py-2 pr-4 font-medium">Datang</th>
                   <th className="py-2 pr-4 font-medium">Pulang</th>
-                  <th className="py-2 font-medium">Status</th>
+                  <th className="py-2 pr-4 font-medium">Status</th>
+                  <th className="py-2 font-medium">Durasi Kerja</th>
                 </tr>
               </thead>
               <tbody>
                 {Array.from(new Set(history.map((h) => h.date))).map((date) => {
                   const dayIn = history.find((h) => h.date === date && h.type === 'check_in');
                   const dayOut = history.find((h) => h.date === date && h.type === 'check_out');
+                  const duration = dayIn && dayOut ? workDurationHours(dayIn.recordedAt, dayOut.recordedAt) : null;
                   const fmtTime = (r?: AttendanceRecord) =>
                     r ? new Date(r.recordedAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : '-';
                   return (
@@ -345,7 +358,7 @@ export function StudentAttendance({ student }: StudentAttendanceProps) {
                       </td>
                       <td className="py-2 pr-4 text-foreground">{fmtTime(dayIn)}</td>
                       <td className="py-2 pr-4 text-foreground">{fmtTime(dayOut)}</td>
-                      <td className="py-2">
+                      <td className="py-2 pr-4">
                         {dayIn?.status === 'terlambat' ? (
                           <span className="rounded bg-amber-500/20 px-2 py-0.5 text-xs font-medium text-amber-700">
                             Terlambat
@@ -354,6 +367,17 @@ export function StudentAttendance({ student }: StudentAttendanceProps) {
                           <span className="rounded bg-green-500/20 px-2 py-0.5 text-xs font-medium text-green-700">
                             Tepat Waktu
                           </span>
+                        )}
+                      </td>
+                      <td className="py-2">
+                        {duration === null ? (
+                          <span className="text-muted-foreground">-</span>
+                        ) : duration < MIN_WORK_HOURS ? (
+                          <span className="rounded bg-amber-500/20 px-2 py-0.5 text-xs font-medium text-amber-700">
+                            {formatDurationHours(duration)} ⚠
+                          </span>
+                        ) : (
+                          <span className="text-foreground">{formatDurationHours(duration)}</span>
                         )}
                       </td>
                     </tr>
