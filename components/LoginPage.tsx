@@ -99,25 +99,6 @@ export function LoginPage({ onLogin }: LoginPageProps) {
               {isLoading ? 'Logging in...' : 'Login'}
             </button>
           </form>
-
-          {/* <div className="mt-8 pt-8 border-t border-border">
-            <p className="text-xs font-semibold text-muted-foreground mb-3">Demo Credentials:</p>
-            <div className="space-y-2 text-xs">
-              <div>
-                <p className="font-medium text-foreground">Student Accounts:</p>
-                <p className="text-muted-foreground">abdul / abdul123</p>
-                <p className="text-muted-foreground">divo / divo123</p>
-                <p className="text-muted-foreground">rendy / rendy123</p>
-                <p className="text-muted-foreground">asri / asri123</p>
-                <p className="text-muted-foreground">boby / boby123</p>
-                <p className="text-muted-foreground">tegar / tegar123</p>
-              </div>
-              <div className="pt-2">
-                <p className="font-medium text-foreground">Supervisor Account:</p>
-                <p className="text-muted-foreground">supervisor / supervisor123</p>
-              </div>
-            </div>
-          </div> */}
         </div>
       </div>
     </div>
