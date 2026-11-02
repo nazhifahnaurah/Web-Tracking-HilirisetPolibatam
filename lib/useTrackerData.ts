@@ -11,6 +11,7 @@ const DEFAULT_STUDENTS: Student[] = [
   { id: '4', name: 'Asri',                   email: 'asri',       password: 'asri123',       studentId: 'STU004', team: 'ULV Drone', role: 'student' },
   { id: '5', name: 'Boby',                   email: 'boby',       password: 'boby123',       studentId: 'STU005', team: 'ULV Drone', role: 'student' },
   { id: '6', name: 'Tegar',                  email: 'tegar',      password: 'tegar123',      studentId: 'STU006', team: 'ULV Drone', role: 'student' },
+  { id: '7', name: 'Atika Yunisa Anadia',     email: 'atika',      password: 'atika123',      studentId: 'STU007', team: 'ULV Drone', role: 'student' },
 ];
 
 const DEFAULT_SUPERVISORS: Supervisor[] = [
