@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Student } from '@/lib/types';
 import { useAttendance } from '@/lib/useAttendance';
+import { usePermissions } from '@/lib/usePermissions';
 import {
   AttendanceRecord,
   MIN_WORK_HOURS,
@@ -11,6 +12,7 @@ import {
   todayDateString,
   workDurationHours,
 } from '@/lib/attendance';
+import { PERMISSION_TYPE_LABELS, PermissionRecord } from '@/lib/permission';
 import { ChevronLeft, ChevronRight, DownloadCloud, MapPin, Trash2, X } from 'lucide-react';
 
 interface SupervisorAttendanceProps {
@@ -25,8 +27,10 @@ function startOfMonthString(): string {
 
 export function SupervisorAttendance({ students }: SupervisorAttendanceProps) {
   const { fetchRecordsForDateAll, fetchRecordsForStudentRange, deleteAttendance } = useAttendance();
+  const { fetchPermissionsForDateAll } = usePermissions();
   const [date, setDate] = useState(todayDateString());
   const [records, setRecords] = useState<AttendanceRecord[]>([]);
+  const [permissions, setPermissions] = useState<PermissionRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [lightbox, setLightbox] = useState<{ url: string; title: string } | null>(null);
   const [confirmingStudentId, setConfirmingStudentId] = useState<string | null>(null);
@@ -44,7 +48,8 @@ export function SupervisorAttendance({ students }: SupervisorAttendanceProps) {
       setRecords(r);
       setLoading(false);
     });
-  }, [date, fetchRecordsForDateAll]);
+    fetchPermissionsForDateAll(date).then(setPermissions);
+  }, [date, fetchRecordsForDateAll, fetchPermissionsForDateAll]);
 
   const handleDelete = async (checkIn?: AttendanceRecord, checkOut?: AttendanceRecord) => {
     setDeleting(true);
@@ -236,6 +241,7 @@ export function SupervisorAttendance({ students }: SupervisorAttendanceProps) {
                   <th className="py-2 pr-4 font-medium">Status</th>
                   <th className="py-2 pr-4 font-medium">Pulang</th>
                   <th className="py-2 pr-4 font-medium">Durasi</th>
+                  <th className="py-2 pr-4 font-medium">Keterangan</th>
                   <th className="py-2 pr-4 font-medium">Foto</th>
                   <th className="py-2 font-medium">Aksi</th>
                 </tr>
@@ -247,6 +253,7 @@ export function SupervisorAttendance({ students }: SupervisorAttendanceProps) {
                   const duration =
                     checkIn && checkOut ? workDurationHours(checkIn.recordedAt, checkOut.recordedAt) : null;
                   const checkInLiveStatus = checkIn ? checkInStatus(new Date(checkIn.recordedAt)) : null;
+                  const permission = permissions.find((p) => p.studentId === student.id);
                   return (
                     <tr key={student.id} className="border-b border-border/50">
                       <td className="py-3 pr-4">
@@ -279,6 +286,28 @@ export function SupervisorAttendance({ students }: SupervisorAttendanceProps) {
                           </span>
                         ) : (
                           <span className="text-foreground">{formatDurationHours(duration)}</span>
+                        )}
+                      </td>
+                      <td className="py-3 pr-4 max-w-[220px]">
+                        {permission ? (
+                          <div className="text-xs">
+                            <span
+                              className={`inline-block rounded px-2 py-0.5 font-medium ${
+                                permission.type === 'sakit'
+                                  ? 'bg-blue-500/20 text-blue-700'
+                                  : permission.type === 'terlambat'
+                                  ? 'bg-amber-500/20 text-amber-700'
+                                  : 'bg-secondary text-muted-foreground'
+                              }`}
+                            >
+                              {PERMISSION_TYPE_LABELS[permission.type]}
+                            </span>
+                            {permission.reason && (
+                              <p className="mt-1 whitespace-pre-wrap text-muted-foreground">{permission.reason}</p>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
                         )}
                       </td>
                       <td className="py-3">

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Student } from '@/lib/types';
 import { useAttendance } from '@/lib/useAttendance';
+import { usePermissions } from '@/lib/usePermissions';
 import { AttendanceCamera } from './AttendanceCamera';
 import {
   AttendanceRecord,
@@ -17,6 +18,7 @@ import {
   todayDateString,
   workDurationHours,
 } from '@/lib/attendance';
+import { PERMISSION_TYPE_LABELS, PermissionRecord, PermissionType, permissionRequiresReason } from '@/lib/permission';
 import { CheckCircle2, Clock, MapPin, XCircle, Loader2 } from 'lucide-react';
 
 interface StudentAttendanceProps {
@@ -27,10 +29,18 @@ type Phase = 'idle' | 'locating' | 'too-far' | 'camera' | 'uploading' | 'result'
 
 export function StudentAttendance({ student }: StudentAttendanceProps) {
   const { submitAttendance, fetchRecordsForDate, fetchRecordsForStudentRange } = useAttendance();
+  const { submitPermission, fetchPermissionForDate } = usePermissions();
 
   const [todayRecords, setTodayRecords] = useState<AttendanceRecord[]>([]);
   const [history, setHistory] = useState<AttendanceRecord[]>([]);
   const [loadingToday, setLoadingToday] = useState(true);
+
+  const [todayPermission, setTodayPermission] = useState<PermissionRecord | null>(null);
+  const [showPermissionForm, setShowPermissionForm] = useState(false);
+  const [permType, setPermType] = useState<PermissionType>('terlambat');
+  const [permReason, setPermReason] = useState('');
+  const [permSubmitting, setPermSubmitting] = useState(false);
+  const [permError, setPermError] = useState<string | null>(null);
 
   const [activeType, setActiveType] = useState<AttendanceType | null>(null);
   const [phase, setPhase] = useState<Phase>('idle');
@@ -67,11 +77,42 @@ export function StudentAttendance({ student }: StudentAttendanceProps) {
     setHistory(records);
   };
 
+  const loadTodayPermission = async () => {
+    const permission = await fetchPermissionForDate(student.id, today);
+    setTodayPermission(permission);
+  };
+
   useEffect(() => {
     loadToday();
     loadHistory();
+    loadTodayPermission();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [student.id]);
+
+  const openPermissionForm = () => {
+    setPermType(todayPermission?.type ?? 'terlambat');
+    setPermReason(todayPermission?.reason ?? '');
+    setPermError(null);
+    setShowPermissionForm(true);
+  };
+
+  const handlePermissionSubmit = async () => {
+    setPermSubmitting(true);
+    setPermError(null);
+    const { error } = await submitPermission({
+      studentId: student.id,
+      date: today,
+      type: permType,
+      reason: permReason,
+    });
+    if (error) {
+      setPermError(error);
+    } else {
+      setShowPermissionForm(false);
+      await loadTodayPermission();
+    }
+    setPermSubmitting(false);
+  };
 
   const resetFlow = () => {
     setActiveType(null);
@@ -224,6 +265,77 @@ export function StudentAttendance({ student }: StudentAttendanceProps) {
           Hari ini bukan hari kerja (Senin-Jumat), presensi tidak tersedia.
         </div>
       )}
+
+      <div className="rounded-lg border border-border bg-card p-4">
+        {!showPermissionForm ? (
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-sm font-medium text-foreground">Izin Hari Ini</p>
+              {todayPermission ? (
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {PERMISSION_TYPE_LABELS[todayPermission.type]}
+                  {todayPermission.reason ? ` — ${todayPermission.reason}` : ''}
+                </p>
+              ) : (
+                <p className="mt-1 text-sm text-muted-foreground">Belum ada izin yang diajukan hari ini.</p>
+              )}
+            </div>
+            <button
+              onClick={openPermissionForm}
+              className="shrink-0 rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-secondary"
+            >
+              {todayPermission ? 'Ubah Izin' : 'Ajukan Izin'}
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <p className="text-sm font-medium text-foreground">Ajukan Izin</p>
+            <div>
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">Jenis Izin</label>
+              <select
+                value={permType}
+                onChange={(e) => setPermType(e.target.value as PermissionType)}
+                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground"
+              >
+                <option value="terlambat">Izin Terlambat</option>
+                <option value="sakit">Izin Sakit</option>
+                <option value="lain_lain">Izin Lain-lain</option>
+              </select>
+            </div>
+            {permissionRequiresReason(permType) && (
+              <div>
+                <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                  Keterangan / Alasan <span className="text-destructive">*</span>
+                </label>
+                <textarea
+                  value={permReason}
+                  onChange={(e) => setPermReason(e.target.value)}
+                  rows={3}
+                  placeholder="Jelaskan alasannya..."
+                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground"
+                />
+              </div>
+            )}
+            {permError && <p className="text-sm text-destructive">{permError}</p>}
+            <div className="flex gap-2">
+              <button
+                onClick={handlePermissionSubmit}
+                disabled={permSubmitting || (permissionRequiresReason(permType) && !permReason.trim())}
+                className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+              >
+                {permSubmitting ? 'Menyimpan...' : 'Simpan'}
+              </button>
+              <button
+                onClick={() => setShowPermissionForm(false)}
+                disabled={permSubmitting}
+                className="rounded-lg border border-border px-4 py-2 text-sm text-foreground hover:bg-secondary"
+              >
+                Batal
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
 
       {!loadingToday && (
         <div className="space-y-3">
